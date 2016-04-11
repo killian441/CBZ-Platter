@@ -18,20 +18,18 @@ import sys
 import io #some io operations need this
 import os #This is for file operations
 import zipfile #for zipfile manipulation
+import configparser #python 3.4
 
-from cbzplatterlib.utils import filesToRemove
+import cbzplatterlib.utils as utils
 import cbzplatterlib.WebServer as WebServer
 
 #Global vars here:
-supportedFileType = ('.jpg','.jpeg','.gif','.png','.bmp')
-blankGIF = "data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="
-verboseLevel = 3 #Levels 0 = suppress error reporting, 1 = print errors but not much else, 2 = print most stuff, 3 = debug
+
 #End Globals
 
 def recursDir ( currentDir ):
     dirContents = os.listdir(currentDir) #list of contents
     returnList = [currentDir] #list to return
-#    temp = []
     
     for y in dirContents: #for each item in this list check if it is a folder
         if os.path.isdir(os.path.join(currentDir,y)):
@@ -49,7 +47,7 @@ def recursZip ( directoryList ): #input list of directories to search
             if zipfile.is_zipfile(fullx):
                 returnList.append(fullx) #Add zipfiles to this list
                 
-    if (verboseLevel >= 3): { print("recursZip, returnList: " + str(returnList)) }
+    utils.verboseOutput(3, "recursZip, returnList: " + str(returnList))
     return returnList
 
 def archiveList ( currentDir ):
@@ -59,52 +57,41 @@ def archiveList ( currentDir ):
 
 def cleanUp( ):
     #Got to put this all in a try try again loop in case Windows is indexing images or something when i try to kill it
-    while filesToRemove.showFiles():
-        x = filesToRemove.popFile()
+    while utils.filesToRemove.showFiles():
+        x = utils.filesToRemove.popFile()
         if type(x) is io.TextIOWrapper:
             os.remove(x.name)
         else:
             os.remove(x)
     
-    while filesToRemove.showDirs():
-        x = filesToRemove.popDir()
+    while utils.filesToRemove.showDirs():
+        x = utils.filesToRemove.popDir()
         os.rmdir(x) #Delete temp directory. directory must be empty
         
     return
 
 def main():
-        """Main entry point for the script."""
+    """Main entry point for the script."""
+            
+    utils.verboseOutput(0,"Initializing...")
+            
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    startDirectory = config['DEFAULT'].get('startdirectory',os.getcwd())
+    os.chdir(startDirectory)
+    utils.verboseOutput(2,"Starting in " + startDirectory)
 
-        if (verboseLevel >= 0): { print("Initializing...") }
+    zipList = [] #Null list of zip files
+    subFiles = [] #Null list for subdirectory files
 
-        ########################################
-        #Temp stuff - Uncomment out the following two lines to specify a directory to start in
-        #s = "E:\media\comics"
-        #os.chdir(s)
-        ########################################
+    utils.verboseOutput(2,"Reading list of archived files...")
+    zipList = archiveList(startDirectory) #List of all the archive files in the current directory plus subdirectories
 
-        currentDir = os.getcwd()  #GetCurrentWorkingDirectory, server should be started in directory of interest
+    utils.verboseOutput(2,"Generating Web template...")      
+    WebServer.generateIndexHTML(zipList)
+    WebServer.runHTTPServer ( )
 
-        #subDirectory = [] #list of subdirectories
-        zipList = [] #Null list of zip files
-        subFiles = [] #Null list for subdirectory files
-
-        if (verboseLevel >= 2): { print("Reading list of archived files...") }
-                
-        #subDirectory = (recursDir(currentDir)) #get all subfolders, including local folder, into list
-        #zipList = (recursZip(subDirectory)) #List of all the zip files in the directory and subdirectories
-        zipList = archiveList(currentDir) #List of all the archive files in the current directory plus subdirectories
-
-        if (verboseLevel >= 2): { print("Generating Web template...") }
-        
-        #tempFiles = WebServer.generateIndexHTML(zipList)
-        WebServer.generateIndexHTML(zipList)
-		
-        WebServer.runHTTPServer ( )
-
-        #cleanUp(tempFiles[0],tempFiles[1])
-        cleanUp()
-
+    cleanUp()
 
 if __name__ == '__main__':
     sys.exit(main())
