@@ -13,7 +13,7 @@ import cbzplatterlib.utils as utils
 from cbzplatterlib.CBZHandler import zipListIndex
 
 #Global vars here:
-supportedFileType = ('.jpg','.jpeg','.gif','.png','.bmp')
+supportedFileType = utils.supportedFileType
 blankGIF = "data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="
 #End Globals
 
@@ -172,7 +172,6 @@ class HTTPHandler(http.server.BaseHTTPRequestHandler):
                                           
             if sendReply == True:
                 #Open the static file requested and send it
-#                fullPath = os.curdir + os.sep + self.path
                 f = open(os.curdir + self.path.replace('%20',' '),'rb')
                 self.send_response(200)
                 self.send_header('Content-type',mimetype)
