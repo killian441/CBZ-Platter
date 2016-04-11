@@ -78,10 +78,9 @@ def main():
         if (verboseLevel >= 0): { print("Initializing...") }
 
         ########################################
-        #Temp stuff - In future use current dir or argv
-        s = "E:\media\comics" #this is hardcoded dir for now
-        #s = "F:\\downloads"
-        os.chdir(s)
+        #Temp stuff - Uncomment out the following two lines to specify a directory to start in
+        #s = "E:\media\comics"
+        #os.chdir(s)
         ########################################
 
         currentDir = os.getcwd()  #GetCurrentWorkingDirectory, server should be started in directory of interest
