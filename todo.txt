@@ -1,0 +1,21 @@
+Some things that need to be added/done:
+
+- Config file to change options
+
+  From CBZPlatter.py:
+- Put the zipList into a class to keep track of all the stuff I do with it
+- Also could put the supportedFileType check in generateHTMLPage into its own def and use that with zipListIndex
+- Thirdly thumbs.db keeps showing up and preventing folder from being deleted.
+- Need to have more robust error handling
+- Maybe a verbose command to print out where things are etc.
+- subfolders in zip files cause issues
+- If enough files, no thumbnails? just file names? Maybe seperate by folders?
+- Add swipe gestures for mobile devices
+- Down the road I want minimize thumbnails
+- Support for PDF, EPUB, and RAR even if that requires external packages
+
+  Others:
+- Update the logging feature
+- Add back support for python 2 with SimpleHTTPServer
+- Probably split up the webserver and webpage generator into seperate files
+- Sorting options for files
