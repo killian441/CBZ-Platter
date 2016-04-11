@@ -6,15 +6,15 @@ import tempfile #For temp file operations
 import http.server #this is python 3.4
 #import SimpleHTTPServer #this is python 2.6
 import socketserver
+import configparser #Python 3.4
 from string import Template #template for HTML generation
 
-from cbzplatterlib.utils import filesToRemove
+import cbzplatterlib.utils as utils
 from cbzplatterlib.CBZHandler import zipListIndex
 
 #Global vars here:
 supportedFileType = ('.jpg','.jpeg','.gif','.png','.bmp')
 blankGIF = "data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="
-verboseLevel = 3 #Levels 0 = suppress error reporting, 1 = print errors but not much else, 2 = print most stuff, 3 = debug
 #End Globals
 
 def generateIndexHTML ( fileList ): #Generate index.html, input is list of zip files
@@ -26,7 +26,7 @@ def generateIndexHTML ( fileList ): #Generate index.html, input is list of zip f
     listofFiles = []
     fileListIndex = zipListIndex(fileList)
 
-    if (verboseLevel >= 3): { print("fileListIndex:" + str(fileListIndex)) }
+    utils.verboseOutput(3,"fileListIndex:" + str(fileListIndex))
 
     listofDirs.append(tempfile.mkdtemp(dir=currentDir)) #create tmp dir for thumbnails, etc.
     indexFile = open("index.html",'w') #open or create index.html
@@ -48,7 +48,7 @@ def generateIndexHTML ( fileList ): #Generate index.html, input is list of zip f
             os.close(tf[0]) #Close the file to write whats what into the file
             bodyText += "   <div class=\"preview\"><a href=\"" + os.path.relpath(x) + ".html\"><img class=\"b-lazy\" src=" + blankGIF + " data-src=\"" + os.path.join(os.path.basename(listofDirs[0]),os.path.basename(tf[1])) + "\" /><br/>" + os.path.basename(x) + "</a><br/> " + str(int(os.path.getsize(x)/1024)) + " kB </div>\n"
         except BadZipFile:
-            print(x + " reported as BadZipFile")
+            utils.verboseOutput(1, str(x + " reported as BadZipFile"))
             
     bodyText += "  </div>\n  </div>\n <script>\n var bLazy = new Blazy({\n });\n </script>"
 
@@ -71,10 +71,10 @@ def generateIndexHTML ( fileList ): #Generate index.html, input is list of zip f
     
     #This is a copout and I should add this above where applicable
     for x in listofDirs:
-        filesToRemove.dirs.append(x)
+        utils.filesToRemove.dirs.append(x)
 	
     for y in listofFiles:
-        filesToRemove.files.append(y)
+        utils.filesToRemove.files.append(y)
 	
     return
     #return (listofDirs, listofFiles) #return tuple composed of two lists
@@ -82,10 +82,10 @@ def generateIndexHTML ( fileList ): #Generate index.html, input is list of zip f
 def generateWebPage( pagePath ):
     currentDir=os.getcwd()
     tempDir = tempfile.mkdtemp(dir=os.path.join(currentDir,os.path.dirname(pagePath))) #create new tmp dir for images, new folder for each html file
-    filesToRemove.addDir(tempDir) #Add to list of dirs to delete
+    utils.filesToRemove.addDir(tempDir) #Add to list of dirs to delete
     htmlFile = open((pagePath + ".html"),'w')
-    filesToRemove.addFile(htmlFile)
-    if (verboseLevel >= 3): { print("Generating HTML for " + str(pagePath) + "\nCurrent Path: " + str(currentDir) + "\nTemp Dir: " + str(tempDir)) }
+    utils.filesToRemove.addFile(htmlFile)
+    utils.verboseOutput(3,"Generating HTML for " + str(pagePath) + "\nCurrent Path: " + str(currentDir) + "\nTemp Dir: " + str(tempDir))
 
     indexStr = Template("<!DOCTYPE html>\n<html>\n <head>\n  <title>${title}</title>\n  <style>${style}  </style>\n  <script>${script}  </script>\n </head>\n <body>\n  ${body} </body>\n</html>")
     
@@ -99,7 +99,7 @@ def generateWebPage( pagePath ):
     for val, x in enumerate([v for r in supportedFileType for v in a.namelist() if r.lower() in v.lower()], start=1): #This complicated line, checks that each file in the zip is an image (ie in our supportFiles) and returns a list of the files names that are images
         tf = os.path.join(tempDir,(str(val) + '.' + x.rpartition('.')[2])) #Create list of temp files, numbered from 1 to end of zip, this way we can keep track of pages easily without having specfic names for different books
         fd = os.open(tf,os.O_WRONLY|os.O_CREAT|os.O_BINARY) #O_BINARY is windows only, haven't tested on linux
-        filesToRemove.addFile(tf) #Add temporary image files to list to clean up at end
+        utils.filesToRemove.addFile(tf) #Add temporary image files to list to clean up at end
         os.write(fd,a.read(x)) #Write image to open file, needs to be in binary to work
         os.close(fd) #Close the file to write whats what into the file
         if val == len(a.namelist()): #Links for last file in zip go back to index
@@ -168,7 +168,6 @@ class HTTPHandler(http.server.BaseHTTPRequestHandler):
                 #Here is where I generate the file:
                 fileToUse = self.path.lstrip("/").rstrip(".html").replace('%20',' ')
                 if os.path.isfile(fileToUse) and not os.path.isfile(self.path.replace('%20',' ').lstrip("/")):
-                    #print(self.path.replace('%20',' ').lstrip("/"))
                     generateWebPage(fileToUse)
                                           
             if sendReply == True:
@@ -186,15 +185,15 @@ class HTTPHandler(http.server.BaseHTTPRequestHandler):
             self.send_error(404,'File Not Found: %s' % self.path)
 			
 def runHTTPServer ( ):
-    PORT_NUMBER = 8000
+    PORT_NUMBER = utils.config['DEFAULT'].getint('serverport',8000)
 
     try:
         #Create a web server and define the handler to manage the incoming request
         server = http.server.HTTPServer(('', PORT_NUMBER), HTTPHandler)
-        print('Starting httpserver on port ' , PORT_NUMBER, ', use <Ctrl-C> to stop')
+        utils.verboseOutput(0,"Starting httpserver on port " + str(PORT_NUMBER) + ", use <Ctrl-C> to stop")
         #Wait forever for incoming http requests
         server.serve_forever()
     except KeyboardInterrupt:
-        print('<Ctrl-C> received, shutting down the web server')
+        utils.verboseOutput(0,"<Ctrl-C> received, shutting down the web server")
         server.socket.close()
     return
