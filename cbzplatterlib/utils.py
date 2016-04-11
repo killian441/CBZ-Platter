@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
 
+import configparser #python 3.4
+
+config = configparser.ConfigParser()
+config.read('config.ini')
+verboseLevel = config['DEFAULT'].getint('verboselevel', 1) #Levels 0 = suppress error reporting, 1 = print errors but not much else, 2 = print most stuff, 3 = debug
+
 class filesToClean:
 	def __init__(self):
 		self.dirs  = []
@@ -32,3 +38,7 @@ class filesToClean:
 		return self.dirs.pop()
 		
 filesToRemove = filesToClean()
+
+def verboseOutput ( verboseThreshold, message ): #output message is verboseLevel is equal to or above verboseThreshold
+    if (verboseLevel >= verboseThreshold): { print(message) }
+    return
