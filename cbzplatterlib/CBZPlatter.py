@@ -72,12 +72,10 @@ def cleanUp( ):
 
 def main():
     """Main entry point for the script."""
-            
+    
     utils.verboseOutput(0,"Initializing...")
-            
-    config = configparser.ConfigParser()
-    config.read('config.ini')
-    startDirectory = config['DEFAULT'].get('startdirectory',os.getcwd())
+    
+    startDirectory = utils.config['DEFAULT'].get('startdirectory',os.getcwd())
     os.chdir(startDirectory)
     utils.verboseOutput(2,"Starting in " + startDirectory)
 
