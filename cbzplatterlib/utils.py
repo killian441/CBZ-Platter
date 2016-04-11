@@ -2,9 +2,12 @@
 
 import configparser #python 3.4
 
+#Global vars here:
 config = configparser.ConfigParser()
 config.read('config.ini')
 verboseLevel = config['DEFAULT'].getint('verboselevel', 1) #Levels 0 = suppress error reporting, 1 = print errors but not much else, 2 = print most stuff, 3 = debug
+supportedFileType = ('.jpg','.jpeg','.gif','.png','.bmp')
+#End Globals
 
 class filesToClean:
 	def __init__(self):
