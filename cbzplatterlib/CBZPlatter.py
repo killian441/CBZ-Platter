@@ -22,11 +22,12 @@ import configparser #python 3.4
 
 import cbzplatterlib.utils as utils
 import cbzplatterlib.WebServer as WebServer
+from cbzplatterlib.CBZHandler import listofZipFiles
 
 #Global vars here:
 
 #End Globals
-
+'''
 def recursDir ( currentDir ):
     dirContents = os.listdir(currentDir) #list of contents
     returnList = [currentDir] #list to return
@@ -54,7 +55,7 @@ def archiveList ( currentDir ):
         directoryList = recursDir (currentDir)
         returnList = recursZip(directoryList)
         return returnList
-
+'''
 def cleanUp( ):
     #Got to put this all in a try try again loop in case Windows is indexing images or something when i try to kill it
     while utils.filesToRemove.showFiles():
@@ -79,14 +80,15 @@ def main():
     os.chdir(startDirectory)
     utils.verboseOutput(2,"Starting in " + startDirectory)
 
-    zipList = [] #Null list of zip files
+#    zipList = [] #Null list of zip files
     subFiles = [] #Null list for subdirectory files
 
     utils.verboseOutput(2,"Reading list of archived files...")
-    zipList = archiveList(startDirectory) #List of all the archive files in the current directory plus subdirectories
+#    zipList = archiveList(startDirectory) #List of all the archive files in the current directory plus subdirectories
+    zipList = listofZipFiles(startDirectory)
 
     utils.verboseOutput(2,"Generating Web template...")      
-    WebServer.generateIndexHTML(zipList)
+    WebServer.generateIndexHTML(zipList.showFullPathFileNames())
     WebServer.runHTTPServer ( )
 
     cleanUp()
