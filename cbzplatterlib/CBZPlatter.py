@@ -22,38 +22,11 @@ import configparser #python 3.4
 
 import cbzplatterlib.utils as utils
 import cbzplatterlib.WebServer as WebServer
+from cbzplatterlib.CBZHandler import listofZipFiles
 
 #Global vars here:
 
 #End Globals
-
-def recursDir ( currentDir ):
-    dirContents = os.listdir(currentDir) #list of contents
-    returnList = [currentDir] #list to return
-    
-    for y in dirContents: #for each item in this list check if it is a folder
-        if os.path.isdir(os.path.join(currentDir,y)):
-            returnList=returnList+(recursDir(os.path.join(currentDir,y) ))
-
-    return returnList #Returns a list of fullpath subdirectories
-
-def recursZip ( directoryList ): #input list of directories to search
-    returnList = [] #list to return
-    
-    for y in directoryList: #for each directory in this list check if it contains zipfiles
-        dirContents = os.listdir(y)
-        for x in dirContents:
-            fullx=os.path.join(y,x)
-            if zipfile.is_zipfile(fullx):
-                returnList.append(fullx) #Add zipfiles to this list
-                
-    utils.verboseOutput(3, "recursZip, returnList: " + str(returnList))
-    return returnList
-
-def archiveList ( currentDir ):
-        directoryList = recursDir (currentDir)
-        returnList = recursZip(directoryList)
-        return returnList
 
 def cleanUp( ):
     #Got to put this all in a try try again loop in case Windows is indexing images or something when i try to kill it
@@ -79,13 +52,10 @@ def main():
     os.chdir(startDirectory)
     utils.verboseOutput(2,"Starting in " + startDirectory)
 
-    zipList = [] #Null list of zip files
-    subFiles = [] #Null list for subdirectory files
+    utils.verboseOutput(1,"Reading list of archived files...")
+    zipList = listofZipFiles(startDirectory)
 
-    utils.verboseOutput(2,"Reading list of archived files...")
-    zipList = archiveList(startDirectory) #List of all the archive files in the current directory plus subdirectories
-
-    utils.verboseOutput(2,"Generating Web template...")      
+    utils.verboseOutput(1,"Generating Web template...")      
     WebServer.generateIndexHTML(zipList)
     WebServer.runHTTPServer ( )
 

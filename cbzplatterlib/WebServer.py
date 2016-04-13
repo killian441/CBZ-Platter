@@ -10,27 +10,21 @@ import configparser #Python 3.4
 from string import Template #template for HTML generation
 
 import cbzplatterlib.utils as utils
-from cbzplatterlib.CBZHandler import zipListIndex
 
 #Global vars here:
 supportedFileType = utils.supportedFileType
 blankGIF = "data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="
 #End Globals
 
-def generateIndexHTML ( fileList ): #Generate index.html, input is list of zip files
+def generateIndexHTML ( fileList ): #Generate index.html, input is listofZipFiles class
     #Ideally I'd like this function to take a list of zip files (names only, not full paths) and generate
-    #an index.html and stylesheet.css as well as thumbnails for all zip files, and return a list of 
-    #all temporary files and directories created (both for manipulation and for cleanup reasons).
+    #an index.html and stylesheet.css as well as thumbnails for all zip files.
     currentDir=os.getcwd()
-    listofDirs = []
-    listofFiles = []
-    fileListIndex = zipListIndex(fileList)
 
-    utils.verboseOutput(3,"fileListIndex:" + str(fileListIndex))
-
-    listofDirs.append(tempfile.mkdtemp(dir=currentDir)) #create tmp dir for thumbnails, etc.
+    tempDir = tempfile.mkdtemp(dir=currentDir) #create tmp dir for thumbnails, etc.
+    utils.filesToRemove.addDir(tempDir)
     indexFile = open("index.html",'w') #open or create index.html
-    listofFiles.append(indexFile)
+    utils.filesToRemove.addFile(indexFile)
     
     indexStr = Template("<!DOCTYPE html>\n<html>\n <head>\n  <title>${title}</title>\n ${head}\n  <script>${script}  </script>\n </head>\n <body>\n  ${body} </body>\n</html>")
     
@@ -39,17 +33,18 @@ def generateIndexHTML ( fileList ): #Generate index.html, input is list of zip f
     bodyText = ""
     
     bodyText += "<div class=\"wrap\">\n  <div id=\"mainTable\">\n"
-    for val, x in enumerate(fileList):
-        try:
-            a = zipfile.ZipFile(x)
-            tf = tempfile.mkstemp(suffix=os.path.basename(a.namelist()[fileListIndex[val]]),prefix='',dir=listofDirs[0]) #temp files for thumbnails
-            listofFiles.append(tf[1]) #Index 1 is the name of the temporary file
-            os.write(tf[0],a.read(a.namelist()[fileListIndex[val]]))
-            os.close(tf[0]) #Close the file to write whats what into the file
-            bodyText += "   <div class=\"preview\"><a href=\"" + os.path.relpath(x) + ".html\"><img class=\"b-lazy\" src=" + blankGIF + " data-src=\"" + os.path.join(os.path.basename(listofDirs[0]),os.path.basename(tf[1])) + "\" /><br/>" + os.path.basename(x) + "</a><br/> " + str(int(os.path.getsize(x)/1024)) + " kB </div>\n"
-        except BadZipFile:
-            utils.verboseOutput(1, str(x + " reported as BadZipFile"))
-            
+    for val, eachimageArchive in enumerate(fileList.files):
+        if eachimageArchive.imagesExist:
+            try:
+                a = zipfile.ZipFile(eachimageArchive.fullpathFileName,mode='r') #open zip for reading
+                tf = tempfile.mkstemp(suffix=os.path.basename(a.namelist()[eachimageArchive.imagesIndex[0]]),prefix='',dir=tempDir) #temp files for thumbnails
+                utils.filesToRemove.addFile(tf[1]) #Index 1 is the name of the temporary file
+                os.write(tf[0],a.read(a.namelist()[eachimageArchive.imagesIndex[0]]))
+                os.close(tf[0]) #Close the file to write whats what into the file
+                bodyText += "   <div class=\"preview\"><a href=\"" + os.path.relpath(eachimageArchive.fullpathFileName) + ".html\"><img class=\"b-lazy\" src=" + blankGIF + " data-src=\"" + os.path.join(os.path.basename(tempDir),os.path.basename(tf[1])) + "\" /><br/>" + os.path.basename(eachimageArchive.fullpathFileName) + "</a><br/> " + str(int(os.path.getsize(eachimageArchive.fullpathFileName)/1024)) + " kB </div>\n"
+            except zipfile.BadZipFile:
+                utils.verboseOutput(1, str(eachimageArchive.fullpathFileName + " reported as BadZipFile"))
+    
     bodyText += "  </div>\n  </div>\n <script>\n var bLazy = new Blazy({\n });\n </script>"
 
     scriptText = "/*!\n  hey, [be]Lazy.js - v1.3.1 - 2015.02.01\n  A lazy loading and multi-serving image script\n  (c) Bjoern Klinggaard - @bklinggaard - http://dinbror.dk/blazy\n*/\n  (function(d,h){\"function\"===typeof define&&define.amd?define(h):\"object\"===typeof exports?module.exports=h():d.Blazy=h()})(this,function(){function d(b){if(!document.querySelectorAll){var g=document.createStyleSheet();document.querySelectorAll=function(b,a,e,d,f){f=document.all;a=[];b=b.replace(/\[for\b/gi,\"[htmlFor\").split(\",\");for(e=b.length;e--;){g.addRule(b[e],\"k:v\");for(d=f.length;d--;)f[d].currentStyle.k&&a.push(f[d]);g.removeRule(0)}return a}}m=!0;k=[];e={};a=b||{};a.error=a.error||!1;a.offset=a.offset||100;a.success=a.success||!1;a.selector=a.selector||\".b-lazy\";a.separator=a.separator||\"|\";a.container=a.container?document.querySelectorAll(a.container):!1;a.errorClass=a.errorClass||\"b-error\";a.breakpoints=a.breakpoints||!1;a.successClass=a.successClass||\"b-loaded\";a.src=r=a.src||\"data-src\";u=1<window.devicePixelRatio;e.top=0-a.offset;e.left=0-a.offset;f=v(w,25);t=v(x,50);x();n(a.breakpoints,function(b){if(b.width>=window.screen.width)return r=b.src,!1});h()}function h(){y(a.selector);m&&(m=!1,a.container&&n(a.container,function(b){p(b,\"scroll\",f)}),p(window,\"resize\",t),p(window,\"resize\",f),p(window,\"scroll\",f));w()}function w(){for(var b=0;b<l;b++){var g=k[b],c=g.getBoundingClientRect();if(c.right>=e.left&&c.bottom>=e.top&&c.left<=e.right&&c.top<=e.bottom||-1!==(\" \"+g.className+\" \").indexOf(\" \"+a.successClass+\" \"))d.prototype.load(g),k.splice(b,1),l--,b--}0===l&&d.prototype.destroy()}function z(b,g){if(g||0<b.offsetWidth&&0<b.offsetHeight){var c=b.getAttribute(r)||b.getAttribute(a.src);if(c){var c=c.split(a.separator),d=c[u&&1<c.length?1:0],c=new Image;n(a.breakpoints,function(a){b.removeAttribute(a.src)});b.removeAttribute(a.src);c.onerror=function(){a.error&&a.error(b,\"invalid\");b.className=b.className+\" \"+a.errorClass};c.onload=function(){\"img\"===b.nodeName.toLowerCase()?b.src=d:b.style.backgroundImage='url(\"'+d+'\")';b.className=b.className+\" \"+a.successClass;a.success&&a.success(b)};c.src=d}else a.error&&a.error(b,\"missing\"),b.className=b.className+\" \"+a.errorClass}}function y(b){b=document.querySelectorAll(b);for(var a=l=b.length;a--;k.unshift(b[a]));}function x(){e.bottom=(window.innerHeight||document.documentElement.clientHeight)+a.offset;e.right=(window.innerWidth||document.documentElement.clientWidth)+a.offset}function p(b,a,c){b.attachEvent?b.attachEvent&&b.attachEvent(\"on\"+a,c):b.addEventListener(a,c,!1)}function q(b,a,c){b.detachEvent?b.detachEvent&&b.detachEvent(\"on\"+a,c):b.removeEventListener(a,c,!1)}function n(a,d){if(a&&d)for(var c=a.length,e=0;e<c&&!1!==d(a[e],e);e++);}function v(a,d){var c=0;return function(){var e=+new Date;e-c<d||(c=e,a.apply(k,arguments))}}var r,a,e,k,l,u,m,f,t;d.prototype.revalidate=function(){h()};d.prototype.load=function(b,d){-1===(\" \"+b.className+\" \").indexOf(\" \"+a.successClass+\" \")&&z(b,d)};d.prototype.destroy=function(){a.container&&n(a.container,function(a){q(a,\"scroll\",f)});q(window,\"scroll\",f);q(window,\"resize\",f);q(window,\"resize\",t);l=0;k.length=0;m=!0};return d});"
@@ -59,7 +54,7 @@ def generateIndexHTML ( fileList ): #Generate index.html, input is list of zip f
 
     #begin generate CSS
     cssFile = open("stylesheet.css",'w') #open or create stylesheet.css
-    listofFiles.append(cssFile)
+    utils.filesToRemove.addFile(cssFile)
     cssText  = "body{\n    font-family: arial, helvetica, sans-serif;\n    background-color: #CCCCCC;\n}\n"
     cssText += "img {\n border-style: solid;\n    border-width: 1px;\n    border-color: black;\n    height: 165px;\n    width: 120px;\n}\n"
     cssText += ".preview {\n    text-align: center;\n   font-size:0.85em;\n color: white;\n width: 300px;   \n  padding: 10px;\n    background-color: #666666;\n    border-radius: 14px;\n  margin:20px;\n}\n"
@@ -68,16 +63,8 @@ def generateIndexHTML ( fileList ): #Generate index.html, input is list of zip f
     cssText += "#mainTable:before {\n   content: '';\n    position: absolute;\n    top: 0;\n    bottom: 0;\n    z-index: -1;\n    left: 5%;\n   width:90%;\n    background: #336699;\n  border-radius: 14px;\n}\n"
     cssFile.write(cssText)
     cssFile.close()
-    
-    #This is a copout and I should add this above where applicable
-    for x in listofDirs:
-        utils.filesToRemove.dirs.append(x)
-	
-    for y in listofFiles:
-        utils.filesToRemove.files.append(y)
-	
+
     return
-    #return (listofDirs, listofFiles) #return tuple composed of two lists
 
 def generateWebPage( pagePath ):
     currentDir=os.getcwd()
@@ -95,14 +82,20 @@ def generateWebPage( pagePath ):
     bodyText   = ""
     
     bodyText += "<div id=\"mainTable\">\n   <div id=\"bottom\"><a href=\"/index.html\"><span>Home</span></a></div>\n"
-    a = zipfile.ZipFile(pagePath)
-    for val, x in enumerate([v for r in supportedFileType for v in a.namelist() if r.lower() in v.lower()], start=1): #This complicated line, checks that each file in the zip is an image (ie in our supportFiles) and returns a list of the files names that are images
+    a = zipfile.ZipFile(pagePath,mode='r')
+    #The following line checks that each file in the zip is an image (ie in our supportFiles) and returns a list of the files names that are images
+    imagesinArchive = [v for r in supportedFileType for v in a.namelist() if r.lower() in v.lower()] 
+    numberofimagesinArchive = len(imagesinArchive)
+    for val, x in enumerate(imagesinArchive, start=1): 
         tf = os.path.join(tempDir,(str(val) + '.' + x.rpartition('.')[2])) #Create list of temp files, numbered from 1 to end of zip, this way we can keep track of pages easily without having specfic names for different books
         fd = os.open(tf,os.O_WRONLY|os.O_CREAT|os.O_BINARY) #O_BINARY is windows only, haven't tested on linux
         utils.filesToRemove.addFile(tf) #Add temporary image files to list to clean up at end
-        os.write(fd,a.read(x)) #Write image to open file, needs to be in binary to work
+        try: #This is here to allow archives with errors to be included. Upon failure the archive file is skipped but the disk file still exists.
+            os.write(fd,a.read(x)) #Write image to open file, needs to be in binary to work
+        except zipfile.BadZipFile as inst:
+            utils.verboseOutput(1,"File " + str(pagePath) + " reported " + str(inst))
         os.close(fd) #Close the file to write whats what into the file
-        if val == len(a.namelist()): #Links for last file in zip go back to index
+        if val == numberofimagesinArchive: #Links for last file in zip go back to index
             bodyText += "   <div class=\"preview\" id=\"page" + str(val) + "\"><div class=\"left\"><a href=\"#page" + str(val-1) + "\"><span><</span></a></div><a href=\"/index.html\"><img class=\"b-lazy\" src=" + blankGIF + " data-src=\"" + os.path.relpath(tf,os.path.join(currentDir,os.path.dirname(pagePath))) + "\" /></a><div class=\"right\"><a href=\"index.html\"><span>></span></a></div></div>\n"
         else:
             bodyText += "   <div class=\"preview\" id=\"page" + str(val) + "\"><div class=\"left\"><a href=\"#page" + str(val-1) + "\"><span><</span></a></div><a href=\"#page" + str(val +1) + "\"><img class=\"b-lazy\" src=" + blankGIF + " data-src=\"" + os.path.relpath(tf,os.path.join(currentDir,os.path.dirname(pagePath))) + "\" /></a><div class=\"right\"><a href=\"#page" + str(val +1) + "\"><span>></span></a></div></div>\n"
@@ -128,7 +121,7 @@ def generateWebPage( pagePath ):
     htmlFile.close()
     return
 
-#This will be for python 3.4    
+#This is for python 3.4    
 class HTTPHandler(http.server.BaseHTTPRequestHandler):
     
     def do_GET(self):
@@ -184,7 +177,7 @@ class HTTPHandler(http.server.BaseHTTPRequestHandler):
             self.send_error(404,'File Not Found: %s' % self.path)
 			
 def runHTTPServer ( ):
-    PORT_NUMBER = utils.config['DEFAULT'].getint('serverport',8000)
+    PORT_NUMBER = utils.serverport
 
     try:
         #Create a web server and define the handler to manage the incoming request
