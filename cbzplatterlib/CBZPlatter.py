@@ -52,14 +52,10 @@ def main():
     os.chdir(startDirectory)
     utils.verboseOutput(2,"Starting in " + startDirectory)
 
-#    zipList = [] #Null list of zip files
-    subFiles = [] #Null list for subdirectory files
-
-    utils.verboseOutput(2,"Reading list of archived files...")
-#    zipList = archiveList(startDirectory) #List of all the archive files in the current directory plus subdirectories
+    utils.verboseOutput(1,"Reading list of archived files...")
     zipList = listofZipFiles(startDirectory)
 
-    utils.verboseOutput(2,"Generating Web template...")      
+    utils.verboseOutput(1,"Generating Web template...")      
     WebServer.generateIndexHTML(zipList)
     WebServer.runHTTPServer ( )
 

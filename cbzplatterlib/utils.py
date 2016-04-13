@@ -6,6 +6,7 @@ import configparser #python 3.4
 config = configparser.ConfigParser()
 config.read('config.ini')
 verboseLevel = config['DEFAULT'].getint('verboselevel', 1) #Levels 0 = suppress error reporting, 1 = print errors but not much else, 2 = print most stuff, 3 = debug
+serverport = config['DEFAULT'].getint('serverport',8000)
 supportedFileType = ('.jpg','.jpeg','.gif','.png','.bmp')
 #End Globals
 
@@ -25,7 +26,12 @@ class filesToClean:
 		
 	def showDirs(self):
 		return self.dirs
-		
+	
+	def latestDir(self):
+		if not self.dirs:
+			return None
+		return self.dirs[-1]
+			
 	def removeFile(self, fileName): #Remove a specific file
 		#add this in later
 		pass
@@ -42,6 +48,6 @@ class filesToClean:
 		
 filesToRemove = filesToClean()
 
-def verboseOutput ( verboseThreshold, message ): #output message is verboseLevel is equal to or above verboseThreshold
+def verboseOutput ( verboseThreshold, message ): #output message if verboseLevel is equal to or above verboseThreshold
     if (verboseLevel >= verboseThreshold): { print(message) }
     return
