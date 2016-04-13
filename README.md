@@ -17,4 +17,4 @@ Currently CBZ-Platter will generate a list of CBZ or Zip archive files (which in
 ----------
 #### Running
 
-From the source, run "cbzplatter" from the directory you want to discover media in.
+Put the directory you want to discover media in into config.ini and run "cbzplatter".
