@@ -12,10 +12,11 @@ Some things that need to be added/done:
 - If enough files, no thumbnails? just file names? Maybe seperate by folders?
 - Add swipe gestures for mobile devices
 - Down the road I want minimize thumbnails
+- Thumbnails should have correct aspect ratio in index.html
 - Support for PDF, EPUB, and RAR even if that requires external packages
 
   Others:
 - Update the logging feature
-- Add back support for python 2 with SimpleHTTPServer
+<s>- Add back support for python 2 with SimpleHTTPServer</s>
 - Probably split up the webserver and webpage generator into seperate files
 - Sorting options for files
