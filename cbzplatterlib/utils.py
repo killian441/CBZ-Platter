@@ -5,9 +5,9 @@ import configparser #python 3.4
 #Global vars here:
 config = configparser.ConfigParser()
 config.read('config.ini')
-verboseLevel = config['DEFAULT'].getint('verboselevel', 1) #Levels 0 = suppress error reporting, 1 = print errors but not much else, 2 = print most stuff, 3 = debug
-serverport = config['DEFAULT'].getint('serverport',8000)
-supportedFileType = ('.jpg','.jpeg','.gif','.png','.bmp')
+verboseLevel = config['DEFAULT'].getint('verboseLevel', 1) #Levels 0 = suppress error reporting, 1 = print errors but not much else, 2 = print most stuff, 3 = debug
+serverport = config['DEFAULT'].getint('serverPort',8000)
+supportedFileType = ('.jpg','.jpeg','.jpe','.gif','.png','.bmp','.webp')
 #End Globals
 
 class filesToClean:

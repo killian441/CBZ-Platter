@@ -60,6 +60,7 @@ def main():
     WebServer.runHTTPServer ( )
 
     cleanUp()
+    utils.verboseOutput(1,"Done")
 
 if __name__ == '__main__':
     sys.exit(main())

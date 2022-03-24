@@ -14,9 +14,11 @@ Some things that need to be added/done:
 - Down the road I want minimize thumbnails
 - Thumbnails should have correct aspect ratio in index.html
 - Support for PDF, EPUB, and RAR even if that requires external packages
+- File order in zips are messed up if different file types are contained
 
   Others:
 - Update the logging feature
 <s>- Add back support for python 2 with SimpleHTTPServer</s>
 - Probably split up the webserver and webpage generator into seperate files
+- HTML generation from python package html/html.parser
 - Sorting options for files
