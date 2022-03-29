@@ -18,7 +18,9 @@ Some things that need to be added/done:
 
   Others:
 - Update the logging feature
-<s>- Add back support for python 2 with SimpleHTTPServer</s>
+-<s> Add back support for python 2 with SimpleHTTPServer</s>
 - Probably split up the webserver and webpage generator into seperate files
-- HTML generation from python package html/html.parser
+-<s> HTML generation from python package html/html.parser</s>
+- Some sort of button on the index page to delete or regenerate all subpages
+ - (if a html file is not deleted after previous server it will never be updated)
 - Sorting options for files

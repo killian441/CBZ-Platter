@@ -48,10 +48,11 @@ class imageArchive:
 		return		
 	
 class listofZipFiles:
-#This will have the list of all Zip archives in the given directory and subdirectories
-#It will have an imagesExist variable that will say whether it has images or not, alternatively it will remove zipFiles that don't contain images
-#It will have an Index to each image file in the archive
-#This should also have a method to update everything once its been created.
+# This will have the list of all Zip archives in the given directory and subdirectories
+# It will have an imagesExist variable that will say whether it has images or not, 
+# alternatively it will remove zipFiles that don't contain images
+# It will have an Index to each image file in the archive
+# This should also have a method to update everything once its been created.
 
 	def __init__(self, directory):
 		self.baseDirectory = directory #Directory to look for zip files
