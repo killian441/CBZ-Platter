@@ -22,6 +22,7 @@ import configparser #python 3.4
 
 import cbzplatterlib.utils as utils
 import cbzplatterlib.WebServer as WebServer
+import cbzplatterlib.PageGeneration as PageGeneration
 from cbzplatterlib.CBZHandler import listofZipFiles
 
 #Global vars here:
@@ -56,7 +57,7 @@ def main():
     zipList = listofZipFiles(startDirectory)
 
     utils.verboseOutput(1,"Generating Web template...")      
-    WebServer.generateIndexHTML(zipList)
+    PageGeneration.generateIndexHTML(zipList)
     WebServer.runHTTPServer ( )
 
     cleanUp()
