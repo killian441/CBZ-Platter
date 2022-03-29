@@ -57,7 +57,7 @@ def main():
     zipList = listofZipFiles(startDirectory)
 
     utils.verboseOutput(1,"Generating Web template...")      
-    PageGeneration.generateIndexHTML(zipList)
+    PageGeneration.generateGalleryHTML(zipList)
     WebServer.runHTTPServer ( )
 
     cleanUp()

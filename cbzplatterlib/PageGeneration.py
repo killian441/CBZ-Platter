@@ -12,17 +12,17 @@ import cbzplatterlib.utils as utils
 supportedFileType = utils.supportedFileType
 blankGIF = "data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="
 loadingSVG = (''
-    '<svg width="42px" height="12px" viewBox="0 0 42 12">'
-     '<circle id="cir1" fill="#3A3A3A" cx="6"  cy="6" r="4" >'
-      '<animate href="#cir1" attributeName="r" values="4;6;4;4" dur="1.8s" begin="0s" repeatCount="indefinite" />'
+    '<svg xmlns="http://www.w3.org/2000/svg" width="42px" height="12px" viewBox="0 0 34 12">'
+     '<circle id="cir1" fill="#3A3A3A" cx="6"  cy="6" r="2" >'
+      '<animate href="#cir1" attributeName="r" values="2;4;2;2" dur="1.8s" begin="0s" repeatCount="indefinite" />'
       '<animate href="#cir1" attributeName="fill" values="#3A3A3A;#4fb95c;#3A3A3A;#3A3A3A" dur="1.8s" begin="0s" repeatCount="indefinite" />'
      '</circle>'
-     '<circle id="cir2" fill="#3A3A3A" cx="21" cy="6" r="4" >'
-      '<animate href="#cir2" attributeName="r" values="4;6;4;4" dur="1.8s" begin="0s" repeatCount="indefinite" />'
+     '<circle id="cir2" fill="#3A3A3A" cx="17" cy="6" r="2" >'
+      '<animate href="#cir2" attributeName="r" values="2;4;2;2" dur="1.8s" begin="0s" repeatCount="indefinite" />'
       '<animate href="#cir2" attributeName="fill" values="#3A3A3A;#4fb95c;#3A3A3A;#3A3A3A" dur="1.8s" begin="0s" repeatCount="indefinite" />'
      '</circle>'
-     '<circle id="cir3" fill="#3A3A3A" cx="36" cy="6" r="4" >'
-      '<animate href="#cir3" attributeName="r" values="4;6;4;4" dur="1.8s" begin="0s" repeatCount="indefinite" />'
+     '<circle id="cir3" fill="#3A3A3A" cx="28" cy="6" r="2" >'
+      '<animate href="#cir3" attributeName="r" values="2;4;2;2" dur="1.8s" begin="0s" repeatCount="indefinite" />'
       '<animate href="#cir3" attributeName="fill" values="#3A3A3A;#4fb95c;#3A3A3A;#3A3A3A" dur="1.8s" begin="0s" repeatCount="indefinite" />'
      '</circle>'
     '</svg>')
@@ -36,25 +36,8 @@ blazyScript =  ("\n  /*!\n"
 
 #End Globals
 
-def _HTMLTemplate ( title="", head="", style="", script="", body="" ):
-    generatedHTML = Template(""
-    "<!DOCTYPE html>\n"
-    "<html>\n"
-    " <head>\n"
-    "  <title> ${_title}  </title>\n"
-    "  ${_head} \n"
-    "  <style> ${_style}  </style>\n"
-    "  <script> ${_script}  </script>\n"
-    " </head>\n"
-    " <body>\n"
-    "  ${_body} </body>\n"
-    "</html>"
-    "")
-    utils.verboseOutput(3,"Title: "+title+"\nHead: "+head+"\nStyle: "+style+"\nScript: "+script+"\nBody: "+body+"\n")
-    return generatedHTML.substitute(_title=title,_style=style,_head=head,_script=script,_body=body)
 
-
-def generateIndexHTML ( fileList ): #Generate index.html, input is listofZipFiles class
+def generateGalleryHTML ( fileList ): #Generate index.html, input is listofZipFiles class
     #Ideally I'd like this function to take a list of zip files (names only, not full paths) and generate
     #an index.html and stylesheet.css as well as thumbnails for all zip files.
     currentDir=os.getcwd()
@@ -65,7 +48,7 @@ def generateIndexHTML ( fileList ): #Generate index.html, input is listofZipFile
     utils.filesToRemove.addFile(indexFile)
     
     titleText = "Index"
-    headText = "<link rel=\"stylesheet\" href=\"stylesheet.css\"/>"
+    headText = ''#"<link rel=\"stylesheet\" href=\"stylesheet.css\"/>"
     bodyText = ""
     
     bodyText += "<div class=\"wrap\">\n  <div id=\"mainTable\">\n"
@@ -77,35 +60,35 @@ def generateIndexHTML ( fileList ): #Generate index.html, input is listofZipFile
                 utils.filesToRemove.addFile(tf[1]) #Index 1 is the name of the temporary file
                 os.write(tf[0],a.read(a.namelist()[eachimageArchive.imagesIndex[0]]))
                 os.close(tf[0]) #Close the file to write whats what into the file
-                bodyText += "   <div class=\"preview\"><a href=\"" + os.path.relpath(eachimageArchive.fullpathFileName) + ".html\"><img class=\"b-lazy loading\" src=" + blankGIF + " data-src=\"" + os.path.join(os.path.basename(tempDir),os.path.basename(tf[1])) + "\" /><br/>" + os.path.basename(eachimageArchive.fullpathFileName) + "</a><br/> " + str(int(os.path.getsize(eachimageArchive.fullpathFileName)/1024)) + " kB </div>\n"
+                bodyText += "   <div class=\"preview\"><a href=\"" + os.path.relpath(eachimageArchive.fullpathFileName) + ".html\"><img class=\"b-lazy\" src=" + "\'data:image/svg+xml," + urlquote(loadingSVG,"/ :<>\"=") + "\' data-src=\"" + os.path.join(os.path.basename(tempDir),os.path.basename(tf[1])) + "\" /><br/>" + os.path.basename(eachimageArchive.fullpathFileName) + "</a><br/> " + str(int(os.path.getsize(eachimageArchive.fullpathFileName)/1024)) + " kB </div>\n"
             except zipfile.BadZipFile:
                 utils.verboseOutput(1, str(eachimageArchive.fullpathFileName + " reported as BadZipFile"))
     
-    bodyText += "  </div>\n  </div>\n <script>\n var bLazy = new Blazy({\n   selector: 'img'\n  });\n </script>"
+    bodyText += "  </div>\n  </div>\n <script>\n var bLazy = new Blazy({\n   selector: '.b-lazy'\n  });\n </script>"
 
     scriptText = blazyScript
 
-    indexFile.write(_HTMLTemplate(title=titleText,head=headText,body=bodyText,script=scriptText))
+    indexFile.write(_templateHTML(title=titleText,head=headText,body=bodyText,script=scriptText, style=_templateGalleryCSS()))
     indexFile.close()
 
     #begin generate CSS
-    cssFile = open("stylesheet.css",'w') #open or create stylesheet.css
-    utils.filesToRemove.addFile(cssFile)
-    cssText  = ("body{\n    font-family: arial, helvetica, sans-serif;\n    background-color: #CCCCCC;\n}\n"
-        ".loading {\n    background: #1E1E1E url(\"data:image/svg+xml," + urlquote(loadingSVG,"/ \"=") + "\") "
-        "center center no-repeat;\n}\n"
-        "img {\n border-style: solid;\n    border-width: 1px;\n    border-color: black;\n    height: 165px;\n    width: 120px;\n}\n"
-        ".preview {\n    text-align: center;\n   font-size:0.85em;\n color: white;\n width: 300px;   \n  padding: 10px;\n    background-color: #666666;\n    border-radius: 14px;\n  margin:20px;\n}\n"
-        ".wrap {\n   content: '';\n    position: relative;\n    top: 0;\n    bottom: 0;\n}\n"
-        "#mainTable{\n   padding:0 5%;\n display:flex;\n flex-wrap:wrap;\n   justify-content:center;\n}\n"
-        "#mainTable:before {\n   content: '';\n    position: absolute;\n    top: 0;\n    bottom: 0;\n    z-index: -1;\n    left: 5%;\n   width:90%;\n    background: #336699;\n  border-radius: 14px;\n}\n"
-        "")
-    cssFile.write(cssText)
-    cssFile.close()
+#    cssFile = open("stylesheet.css",'w') #open or create stylesheet.css
+#    utils.filesToRemove.addFile(cssFile)
+#    cssText  = ("body{\n    font-family: arial, helvetica, sans-serif;\n    background-color: #CCCCCC;\n}\n"
+#        ".loading {\n    background: #1E1E1E url(\"data:image/svg+xml," + urlquote(loadingSVG,"/ <>\"=") + "\") "
+#        "center center no-repeat;\n}\n"
+#        "img {\n border-style: solid;\n    border-width: 1px;\n    border-color: black;\n    height: 165px;\n    width: 120px;\n}\n"
+#        ".preview {\n    text-align: center;\n   font-size:0.85em;\n color: white;\n width: 300px;   \n  padding: 10px;\n    background-color: #666666;\n    border-radius: 14px;\n  margin:20px;\n}\n"
+#        ".wrap {\n   content: '';\n    position: relative;\n    top: 0;\n    bottom: 0;\n}\n"
+#        "#mainTable{\n   padding:0 5%;\n display:flex;\n flex-wrap:wrap;\n   justify-content:center;\n}\n"
+#        "#mainTable:before {\n   content: '';\n    position: absolute;\n    top: 0;\n    bottom: 0;\n    z-index: -1;\n    left: 5%;\n   width:90%;\n    background: #336699;\n  border-radius: 14px;\n}\n"
+#        "")
+#    cssFile.write(_templateGalleryCSS())
+#    cssFile.close()
 
     return
 
-def generateWebPage( pagePath ):
+def generateSliderHTML( pagePath ):
     currentDir=os.getcwd()
     tempDir = tempfile.mkdtemp(dir=os.path.join(currentDir,os.path.dirname(pagePath))) #create new tmp dir for images, new folder for each html file
     utils.filesToRemove.addDir(tempDir) #Add to list of dirs to delete
@@ -154,7 +137,124 @@ def generateWebPage( pagePath ):
     #bLazy javascript here
     scriptText = blazyScript
 
-    htmlFile.write(_HTMLTemplate(title=titleText,style=styleText,script=scriptText,body=bodyText))
+    htmlFile.write(_templateHTML(title=titleText,style=styleText,script=scriptText,body=bodyText))
 
     htmlFile.close()
     return
+
+def _templateHTML ( title="", head="", style="", script="", body="" ):
+    generatedHTML = Template(""
+    "<!DOCTYPE html>\n"
+    "<html>\n"
+    " <head>\n"
+    "  <title> ${_title}  </title>\n"
+    "  ${_head} \n"
+    "  <style> ${_style}  </style>\n"
+    "  <script> ${_script}  </script>\n"
+    " </head>\n"
+    " <body>\n"
+    "  ${_body} </body>\n"
+    "</html>"
+    "")
+    utils.verboseOutput(3,"Title: "+title+"\nHead: "+head+"\nStyle: "+style+"\nScript: "+script+"\nBody: "+body+"\n")
+    return generatedHTML.substitute(_title=title,_style=style,_head=head,_script=script,_body=body)
+
+def _templateGalleryCSS():
+    generatedCSS = ('''
+* {
+  box-sizing: border-box;
+}
+body {
+  background: #336699;
+  margin: 0;
+  padding: 3em 1em;
+}
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+figure {
+  margin: 0;
+}
+figcaption {
+  font-style: italic;
+  font-size: 0.8em;
+  color: darkgrey;
+  line-height: 1.4;
+}
+.grid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 90%;
+  grid-gap: 1em;
+  overflow-x: scroll;
+  -webkit-overflow-scrolling: touch;
+  padding: 2em 1em;
+  background: slategrey;
+}
+@media all and (min-width: 600px) {
+  .grid {
+    grid-auto-flow: initial;
+    grid-template-columns: repeat(auto-fit, minmax(auto, 20em));
+    justify-content: center;
+  }
+}
+.grid__figure {
+  display: grid;
+  grid-template-rows: 15em 1fr;
+  grid-gap: 1em;
+}
+.grid__figure img {
+  width: 100%;
+  height: 100%;
+  -o-object-fit: cover;
+     object-fit: cover;
+}
+img {
+ border-style: solid;
+    border-width: 1px;
+    border-color: black;
+    height: 165px;
+    width: 120px;
+}
+.preview {
+    text-align: center;
+   font-size:0.85em;
+ color: white;
+ width: 300px;   
+  padding: 10px;
+    background-color: #666666;
+    border-radius: 14px;
+  margin:20px;
+}
+.wrap {
+   content: '';
+    position: relative;
+    top: 0;
+    bottom: 0;
+}
+#mainTable{
+   padding:0 5%;
+ display:flex;
+ flex-wrap:wrap;
+   justify-content:center;
+}
+#mainTable:before {
+   content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: -1;
+    left: 5%;
+   width:90%;
+    background: #336699;
+  border-radius: 14px;
+}
+''')
+    return generatedCSS
+
+def _templateSliderCSS():
+    generatedCSS = ''
+    return generatedCSS
+    

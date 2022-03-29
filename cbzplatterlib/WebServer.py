@@ -2,11 +2,10 @@
 
 import os
 import http.server #this is python 3.4+
-#import SimpleHTTPServer #this is python 2.6
 import socketserver
 
 import cbzplatterlib.utils as utils
-from cbzplatterlib.PageGeneration import generateWebPage
+from cbzplatterlib.PageGeneration import generateSliderHTML
 
 #Global vars here:
 supportedFileType = utils.supportedFileType
@@ -45,7 +44,7 @@ class HTTPHandler(http.server.BaseHTTPRequestHandler):
                     fileToUse = self.path.lstrip("/").rstrip(".html").replace('%20',' ')
                     utils.verboseOutput(3,"GET command - File: "+fileToUse+" ; replaced: "+(self.path.replace('%20',' ').lstrip("/")))
                     if os.path.isfile(fileToUse) and not os.path.isfile(self.path.replace('%20',' ').lstrip("/")):
-                        generateWebPage(fileToUse)
+                        generateSliderHTML(fileToUse)
                 else:
                     sendReply = False
                                           
