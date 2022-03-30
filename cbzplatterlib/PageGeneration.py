@@ -47,11 +47,10 @@ def generateGalleryHTML ( fileList ): #Generate index.html, input is listofZipFi
     indexFile = open("index.html",'w') #open or create index.html
     utils.filesToRemove.addFile(indexFile)
     
-    titleText = "Index"
-    headText = ''#"<link rel=\"stylesheet\" href=\"stylesheet.css\"/>"
-    bodyText = ""
-    
-    bodyText += "<div class=\"wrap\">\n  <div id=\"mainTable\">\n"
+    titleText = 'Index'
+    headText  = ''
+    bodyText  = '<ul class="grid">\n'
+
     for val, eachimageArchive in enumerate(fileList.files):
         if eachimageArchive.imagesExist:
             try:
@@ -60,31 +59,27 @@ def generateGalleryHTML ( fileList ): #Generate index.html, input is listofZipFi
                 utils.filesToRemove.addFile(tf[1]) #Index 1 is the name of the temporary file
                 os.write(tf[0],a.read(a.namelist()[eachimageArchive.imagesIndex[0]]))
                 os.close(tf[0]) #Close the file to write whats what into the file
-                bodyText += "   <div class=\"preview\"><a href=\"" + os.path.relpath(eachimageArchive.fullpathFileName) + ".html\"><img class=\"b-lazy\" src=" + "\'data:image/svg+xml," + urlquote(loadingSVG,"/ :<>\"=") + "\' data-src=\"" + os.path.join(os.path.basename(tempDir),os.path.basename(tf[1])) + "\" /><br/>" + os.path.basename(eachimageArchive.fullpathFileName) + "</a><br/> " + str(int(os.path.getsize(eachimageArchive.fullpathFileName)/1024)) + " kB </div>\n"
+                bodyText += (""
+                    + "   <li>\n    <figure class=\"grid__figure\"><a href=\""
+                    + os.path.relpath(eachimageArchive.fullpathFileName) #Link to archive slider page
+                    + ".html\"><img class=\"b-lazy\" src=\'data:image/svg+xml,"
+                    + urlquote(loadingSVG,"/ :<>\"=") #Loading graphic as default image
+                    + "\' data-src=\"" 
+                    + os.path.join(os.path.basename(tempDir),os.path.basename(tf[1])) #Actual preveiw image
+                    + "\" /><figcaption>" 
+                    + os.path.basename(eachimageArchive.fullpathFileName) #Name to display, archive name by default
+                    + "</a><br/> " 
+                    + str(int(os.path.getsize(eachimageArchive.fullpathFileName)/1024)) #Size of archive in kB
+                    + " kB </figcaption>\n</figure>\n</li>\n")
             except zipfile.BadZipFile:
                 utils.verboseOutput(1, str(eachimageArchive.fullpathFileName + " reported as BadZipFile"))
     
-    bodyText += "  </div>\n  </div>\n <script>\n var bLazy = new Blazy({\n   selector: '.b-lazy'\n  });\n </script>"
+    bodyText += "  </ul>\n <script>\n var bLazy = new Blazy({\n   selector: '.b-lazy'\n  });\n </script>"
 
     scriptText = blazyScript
 
     indexFile.write(_templateHTML(title=titleText,head=headText,body=bodyText,script=scriptText, style=_templateGalleryCSS()))
     indexFile.close()
-
-    #begin generate CSS
-#    cssFile = open("stylesheet.css",'w') #open or create stylesheet.css
-#    utils.filesToRemove.addFile(cssFile)
-#    cssText  = ("body{\n    font-family: arial, helvetica, sans-serif;\n    background-color: #CCCCCC;\n}\n"
-#        ".loading {\n    background: #1E1E1E url(\"data:image/svg+xml," + urlquote(loadingSVG,"/ <>\"=") + "\") "
-#        "center center no-repeat;\n}\n"
-#        "img {\n border-style: solid;\n    border-width: 1px;\n    border-color: black;\n    height: 165px;\n    width: 120px;\n}\n"
-#        ".preview {\n    text-align: center;\n   font-size:0.85em;\n color: white;\n width: 300px;   \n  padding: 10px;\n    background-color: #666666;\n    border-radius: 14px;\n  margin:20px;\n}\n"
-#        ".wrap {\n   content: '';\n    position: relative;\n    top: 0;\n    bottom: 0;\n}\n"
-#        "#mainTable{\n   padding:0 5%;\n display:flex;\n flex-wrap:wrap;\n   justify-content:center;\n}\n"
-#        "#mainTable:before {\n   content: '';\n    position: absolute;\n    top: 0;\n    bottom: 0;\n    z-index: -1;\n    left: 5%;\n   width:90%;\n    background: #336699;\n  border-radius: 14px;\n}\n"
-#        "")
-#    cssFile.write(_templateGalleryCSS())
-#    cssFile.close()
 
     return
 
@@ -170,6 +165,7 @@ body {
   padding: 3em 1em;
 }
 ul {
+  border-radius: 5px;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -185,10 +181,10 @@ figcaption {
 }
 .grid {
   display: grid;
-  grid-auto-flow: column;
+  grid-auto-flow: row;
   grid-auto-columns: 90%;
   grid-gap: 1em;
-  overflow-x: scroll;
+  overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   padding: 2em 1em;
   background: slategrey;
@@ -206,55 +202,102 @@ figcaption {
   grid-gap: 1em;
 }
 .grid__figure img {
+  border-radius: 5px;
   width: 100%;
   height: 100%;
-  -o-object-fit: cover;
-     object-fit: cover;
+  -o-object-fit: contain;
+     object-fit: contain;
 }
-img {
- border-style: solid;
-    border-width: 1px;
-    border-color: black;
-    height: 165px;
-    width: 120px;
+a:link {
+  color: darkgrey;
 }
-.preview {
-    text-align: center;
-   font-size:0.85em;
- color: white;
- width: 300px;   
-  padding: 10px;
-    background-color: #666666;
-    border-radius: 14px;
-  margin:20px;
-}
-.wrap {
-   content: '';
-    position: relative;
-    top: 0;
-    bottom: 0;
-}
-#mainTable{
-   padding:0 5%;
- display:flex;
- flex-wrap:wrap;
-   justify-content:center;
-}
-#mainTable:before {
-   content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    z-index: -1;
-    left: 5%;
-   width:90%;
-    background: #336699;
-  border-radius: 14px;
+a:visited {
+  color: lightgrey;
 }
 ''')
     return generatedCSS
 
 def _templateSliderCSS():
-    generatedCSS = ''
+    generatedCSS = ('''
+html,
+body {
+  background: #333;
+}
+.slides {
+  padding: 0;
+  width: 609px;
+  height: 420px;
+  display: block;
+  margin: 0 auto;
+  position: relative;
+}
+.slides * {
+  user-select: none;
+  -ms-user-select: none;
+  -moz-user-select: none;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.slides input {
+  display: none;
+}
+.slide-container {
+  display: block;
+}
+.slide {
+  top: 0;
+  opacity: 0;
+  width: 609px;
+  height: 420px;
+  display: block;
+  position: absolute;
+
+  transform: scale(0);
+
+  transition: all 0.7s ease-in-out;
+}
+.slide img {
+  width: 100%;
+  height: 100%;
+}
+.nav label {
+  width: 200px;
+  height: 100%;
+  display: none;
+  position: absolute;
+
+  opacity: 0;
+  z-index: 9;
+  cursor: pointer;
+
+  transition: opacity 0.2s;
+
+  color: #fff;
+  font-size: 156pt;
+  text-align: center;
+  line-height: 380px;
+  font-family: "Varela Round", sans-serif;
+  background-color: rgba(255, 255, 255, 0.3);
+  text-shadow: 0px 0px 15px rgb(119, 119, 119);
+}
+.slide:hover + .nav label {
+  opacity: 0.5;
+}
+.nav label:hover {
+  opacity: 1;
+}
+.nav .next {
+  right: 0;
+}
+input:checked + .slide-container .slide {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 1s ease-in-out;
+}
+input:checked + .slide-container .nav label {
+  display: block;
+}
+''')
     return generatedCSS
     
