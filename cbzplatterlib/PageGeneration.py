@@ -62,9 +62,9 @@ def generateGalleryHTML ( fileList ): #Generate index.html, input is listofZipFi
                 bodyText += (""
                     + "   <li>\n    <figure class=\"grid__figure\"><a href=\""
                     + os.path.relpath(eachimageArchive.fullpathFileName) #Link to archive slider page
-                    + ".html\"><img class=\"b-lazy\" src=\'data:image/svg+xml,"
-                    + urlquote(loadingSVG,"/ :<>\"=") #Loading graphic as default image
-                    + "\' data-src=\"" 
+                    + ".html\"><img class=\"b-lazy\" src="
+                    + "\'data:image/svg+xml," + urlquote(loadingSVG,"/ :<>\"=") + "\'" #Loading graphic as default image
+                    + " data-src=\"" 
                     + os.path.join(os.path.basename(tempDir),os.path.basename(tf[1])) #Actual preveiw image
                     + "\" /><figcaption>" 
                     + os.path.basename(eachimageArchive.fullpathFileName) #Name to display, archive name by default
