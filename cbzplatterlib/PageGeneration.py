@@ -94,9 +94,8 @@ def generateSliderHTML( pagePath ):
     titleText  = os.path.basename(pagePath).partition('.')[0]
     scriptText = ""
     styleText  = ""
-    bodyText   = ""
-    
-    bodyText += "<div id=\"mainTable\">\n   <div id=\"bottom\"><a href=\"/index.html\"><span>Home</span></a></div>\n"
+    bodyText   = "<div id=\"mainTable\">\n   <div id=\"bottom\"><a href=\"/index.html\"><span>Home</span></a></div>\n"
+ 
     a = zipfile.ZipFile(pagePath,mode='r')
     #The following line checks that each file in the zip is an image (ie in our supportFiles) and returns a list of the files names that are images
     #TODO: This returns files in the order specified in supportedFileType not alphabetical of the zip
@@ -112,23 +111,36 @@ def generateSliderHTML( pagePath ):
             utils.verboseOutput(1,"File " + str(pagePath) + " reported " + str(inst))
         os.close(fd) #Close the file to write whats what into the file
         if val == numberofimagesinArchive: #Links for last file in zip go back to index
-            bodyText += "   <div class=\"preview\" id=\"page" + str(val) + "\"><div class=\"left\"><a href=\"#page" + str(val-1) + "\"><span><</span></a></div><a href=\"/index.html\"><img class=\"b-lazy loading\" src=" + blankGIF + " data-src=\"" + os.path.relpath(tf,os.path.join(currentDir,os.path.dirname(pagePath))) + "\" /></a><div class=\"right\"><a href=\"index.html\"><span>></span></a></div></div>\n"
+            bodyText += ("   <div class=\"singlePage\" id=\"page"
+                     + str(val) 
+                     + "\"><div class=\"left\"><a href=\"#page" 
+                     + str(val-1) 
+                     + "\">&#x2039;</a></div><a href=\"/index.html\"><img class=\"b-lazy\" src=" 
+                     + "\'data:image/svg+xml," + urlquote(loadingSVG,"/ :<>\"=") + "\'" #Loading graphic as default image 
+                     + " data-src=\"" 
+                     + os.path.relpath(tf,os.path.join(currentDir,os.path.dirname(pagePath))) 
+                     + "\" /></a><div class=\"right\"><a href=\"index.html\">&#x203a;</a></div></div>\n"
+                     + "\n")
         else:
-            bodyText += "   <div class=\"preview\" id=\"page" + str(val) + "\"><div class=\"left\"><a href=\"#page" + str(val-1) + "\"><span><</span></a></div><a href=\"#page" + str(val +1) + "\"><img class=\"b-lazy loading\" src=" + blankGIF + " data-src=\"" + os.path.relpath(tf,os.path.join(currentDir,os.path.dirname(pagePath))) + "\" /></a><div class=\"right\"><a href=\"#page" + str(val +1) + "\"><span>></span></a></div></div>\n"
+            bodyText += ("   <div class=\"singlePage\" id=\"page" 
+                     + str(val) 
+                     + "\"><div class=\"left\"><a href=\"#page" 
+                     + str(val-1) 
+                     + "\">&#x2039;</a></div><a href=\"#page" 
+                     + str(val+1) 
+                     + "\"><img class=\"b-lazy\" src=" 
+                     + "\'data:image/svg+xml," + urlquote(loadingSVG,"/ :<>\"=") + "\'" #Loading graphic as default image 
+                     + " data-src=\"" 
+                     + os.path.relpath(tf,os.path.join(currentDir,os.path.dirname(pagePath))) 
+                     + "\" /></a><div class=\"right\"><a href=\"#page" 
+                     + str(val+1) 
+                     + "\">&#x203a;</a></div></div>\n"
+                     + "\n")
 
     bodyText += "  </div>\n <script>\n  var bLazy = new Blazy({\n   selector: 'img'\n  });\n </script>"
   
-    #begin generate CSS    
-    styleText = ("body{\n    font-family: molengo, comic sans ms, sans-serif;\n    background-color: #CCCCCC;\n	margin:0px;\n	overflow:hidden;\n}\nimg {\n    max-height: 100%;\n    max-width: 100%;\n}\n"
-        ".preview {\n	text-align: center;\n	position: relative;\n	width: 100vw;   \n	height: 100vh;\n}\n"
-        "span {\n	font-size:3em;\n	color:rgba(0, 0, 0, 0.2);\n	text-align: center;\n}\n"
-        ".left a{\n	text-decoration: none;\n	line-height: 100vh; \n	display:block;\n    position: absolute;\n	width: 10%; \n    top: 0;\n	left:0;\n    bottom: 0;\n	z-index:1;	\n	transition:background-color, 1s;\n}\n"
-        ".left a:hover {\n	border-radius:10px;\n	opacity:0.6;\n	background-color:gray;\n}\n"
-        ".right a{\n	text-decoration: none;\n	line-height: 100vh; \n	display:block;\n    position: absolute;\n	width: 10%; \n    top: 0;\n	right:0;\n    bottom: 0;\n	z-index:1;\n	transition:background-color, 1s;\n}\n"
-        ".right a:hover {\n	border-radius:10px;\n	opacity:0.6;\n	background-color:gray;\n}\n"
-        "#bottom a{\n	text-decoration: none;\n	text-align: center;\n	display:block;\n    position: fixed;\n	height: 8%; \n	width: 30%;\n	right:35vw;\n    bottom: 0;\n	z-index:1;\n	transition:background-color, 1s;\n}\n"
-        "#bottom a:hover {\n	border-radius:10px;\n	opacity:0.6; \n	background-color:gray;\n}\n")
-    
+    styleText = _templateSliderCSS()
+  
     #bLazy javascript here
     scriptText = blazyScript
 
@@ -138,6 +150,7 @@ def generateSliderHTML( pagePath ):
     return
 
 def _templateHTML ( title="", head="", style="", script="", body="" ):
+    #For future customization this is a function.
     generatedHTML = Template(""
     "<!DOCTYPE html>\n"
     "<html>\n"
@@ -155,6 +168,7 @@ def _templateHTML ( title="", head="", style="", script="", body="" ):
     return generatedHTML.substitute(_title=title,_style=style,_head=head,_script=script,_body=body)
 
 def _templateGalleryCSS():
+    #For future customization this is a function.
     generatedCSS = ('''
 * {
   box-sizing: border-box;
@@ -219,84 +233,82 @@ a:visited {
 
 def _templateSliderCSS():
     generatedCSS = ('''
-html,
-body {
-  background: #333;
+html, body{
+    font-family: "Arial", sans-serif;
+    background-color: #333;
+    margin:0px;
+    overflow:hidden;
 }
-.slides {
-  padding: 0;
-  width: 609px;
-  height: 420px;
-  display: block;
-  margin: 0 auto;
-  position: relative;
+img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
-.slides * {
-  user-select: none;
-  -ms-user-select: none;
-  -moz-user-select: none;
-  -khtml-user-select: none;
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
+.singlePage {
+    text-align: center;
+    position: relative;
+    width: 100vw;   
+    height: 100vh;
 }
-.slides input {
-  display: none;
+.left a{
+    width: 200px;
+    height: 100%;
+    text-decoration: none;
+    line-height: 100vh; 
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    font-size: 156pt;
+    text-align: center;
+    color:rgba(255, 255, 255, 0);
+    z-index:1;  
+    transition:opacity, 0.6s;
 }
-.slide-container {
-  display: block;
+.left a:hover {
+    opacity:0.6;
+    background-color:gray;
+    color: white;
 }
-.slide {
-  top: 0;
-  opacity: 0;
-  width: 609px;
-  height: 420px;
-  display: block;
-  position: absolute;
-
-  transform: scale(0);
-
-  transition: all 0.7s ease-in-out;
+.right a{
+    width: 180px; 
+    height: 100%;
+    text-decoration: none;
+    line-height: 100vh; 
+    display:block;
+    position: absolute;
+    top: 0;
+    right: 0;
+    font-size: 156pt;
+    text-align: center;
+    color:rgba(255, 255, 255, 0);
+    z-index:2;
+    transition:opacity, 0.6s;
 }
-.slide img {
-  width: 100%;
-  height: 100%;
+.right a:hover {
+    opacity:0.6;
+    background-color:gray;
+    color: white;
 }
-.nav label {
-  width: 200px;
-  height: 100%;
-  display: none;
-  position: absolute;
-
-  opacity: 0;
-  z-index: 9;
-  cursor: pointer;
-
-  transition: opacity 0.2s;
-
-  color: #fff;
-  font-size: 156pt;
-  text-align: center;
-  line-height: 380px;
-  font-family: "Varela Round", sans-serif;
-  background-color: rgba(255, 255, 255, 0.3);
-  text-shadow: 0px 0px 15px rgb(119, 119, 119);
+#bottom a{
+    height: 10vw; 
+    width: 50vw;
+    right:25vw;
+    bottom: 0;
+    z-index:1;
+    line-height: 100%; 
+    text-decoration: none;
+    text-align: center;
+    display:block;
+    position: absolute;
+    font-size: 10vw;
+    color:rgba(255, 255, 255, 0);
+    transition:opacity, 0.6s;
 }
-.slide:hover + .nav label {
-  opacity: 0.5;
-}
-.nav label:hover {
-  opacity: 1;
-}
-.nav .next {
-  right: 0;
-}
-input:checked + .slide-container .slide {
-  opacity: 1;
-  transform: scale(1);
-  transition: opacity 1s ease-in-out;
-}
-input:checked + .slide-container .nav label {
-  display: block;
+#bottom a:hover {
+    opacity:0.8; 
+    background-color:gray;
+    color: white;
 }
 ''')
     return generatedCSS
